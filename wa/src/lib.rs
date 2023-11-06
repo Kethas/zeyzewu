@@ -1,7 +1,10 @@
-use std::{fmt::{Display, Write}, str::FromStr};
+use std::{
+    fmt::{Display, Write},
+    str::FromStr,
+};
 
 use rand::Rng;
-use unicode_normalization::char::compose;
+use unicode_normalization::char::{compose, decompose_canonical};
 
 #[derive(Copy, Clone)]
 pub enum CStem {
@@ -235,9 +238,9 @@ pub enum Punctuation {
 impl Random for Punctuation {
     fn random(rng: &mut impl Rng) -> Self {
         match rng.gen_range(0..10) {
-            0 | 1 | 2 | 3 => Punctuation::WordBreak,
-            4 | 5 | 6 => Punctuation::PhraseBreak,
-            7 | 8 | 9 => Punctuation::SentenceEnd,
+            0..=3 => Punctuation::WordBreak,
+            4..=6 => Punctuation::PhraseBreak,
+            7..=9 => Punctuation::SentenceEnd,
             _ => unreachable!(),
         }
     }
@@ -330,28 +333,57 @@ impl FromStr for Syllable {
         // parse vowel
         let ch = *chars.get(index).ok_or(index)?;
 
-        let vowel = match ch {
+        let mut vowel_ch = ch;
+        let mut tone_ch = None;
+        let mut counter = 0;
+
+        println!("decomposing \"{ch}\"...");
+        decompose_canonical(ch, |ch| {
+            if counter == 0 {
+                vowel_ch = ch;
+                println!("vowel_ch = '{ch}'");
+            } else if counter == 1 {
+                tone_ch = Some(ch);
+                println!("tone_ch = '{ch}'");
+            } else {
+                return;
+            }
+
+            counter += 1;
+        });
+
+        let vowel = match vowel_ch {
             'a' => V::A,
             'e' => V::E,
             'i' => V::I,
             'o' => V::O,
             'u' => V::U,
 
-            _ => return Err(index),
+            _ => {
+                eprintln!("invalid char: '{ch}'");
+                return Err(index);
+            }
         };
 
         index += 1;
 
         // parse tone
-        let ch = *chars.get(index).ok_or(index)?;
+        let ch = if let Some(tone_ch) = tone_ch {
+            tone_ch
+        } else {
+            chars.get(index).copied().ok_or(index)?
+        };
 
         let tone = match ch {
-            ',' | '\u{0301}' => T::High,
+            ',' | '\u{0301}' | '´' => T::High,
             '`' | '\u{0300}' => T::Low,
             '^' | '\u{0302}' => T::Peaking,
             '~' | '\u{0303}' => T::Nasal,
 
-            _ => return Err(index),
+            _ => {
+                eprintln!("invalid char: '{ch}'");
+                return Err(index);
+            }
         };
 
         index += 1;
@@ -398,7 +430,14 @@ pub struct Word(pub Vec<Syllable>);
 
 impl Display for Word {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut first = true;
         for syllable in &self.0 {
+            if first {
+                first = false;
+            } else {
+                f.write_char('-')?;
+            }
+
             syllable.fmt(f)?;
         }
 
@@ -410,7 +449,7 @@ impl FromStr for Word {
     type Err = (usize, usize);
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let syllables = s.split("-");
+        let syllables = s.split('-');
 
         let mut word = Vec::new();
 
@@ -645,7 +684,7 @@ impl FromStr for Text {
     type Err = (usize, usize, usize, usize, usize, usize);
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let paragraphs = s.split("\n");
+        let paragraphs = s.split('\n');
 
         let mut text = Vec::new();
 

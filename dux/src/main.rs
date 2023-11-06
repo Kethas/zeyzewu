@@ -9,6 +9,7 @@ use nannou::{
     prelude::*,
     rand::{thread_rng, Rng},
 };
+use wa::Random;
 
 impl Drawable for wa::CStem {
     fn draw(&self, page: &Page, char_centre: (f32, f32), draw: &Draw) {
@@ -208,7 +209,7 @@ impl DrawableTopOrBottom for wa::H {
 impl Drawable for wa::C {
     fn draw(&self, page: &Page, char_centre: (f32, f32), draw: &Draw) {
         match self {
-            wa::C::H(h) => h.draw(page, char_centre, true, draw),
+            wa::C::H(h) => DrawableTopOrBottom::draw(h, page, char_centre, true, draw),
             wa::C::C(c) => c.draw(page, char_centre, draw),
         }
     }
@@ -377,7 +378,7 @@ impl Print for wa::Phrase {
             if first {
                 first = false;
             } else {
-                printer.print(Punctuation::WordBreak, draw);
+                printer.print(wa::Punctuation::WordBreak, draw);
             }
             printer.print(word, draw);
         }
@@ -391,7 +392,7 @@ impl Print for wa::Sentence {
             if first {
                 first = false;
             } else {
-                printer.print(Punctuation::PhraseBreak, draw);
+                printer.print(wa::Punctuation::PhraseBreak, draw);
             }
             printer.print(phrase, draw);
         }
@@ -402,7 +403,7 @@ impl Print for wa::Paragraph {
     fn print(&self, printer: &mut Printer, draw: &Draw) {
         for sentence in &self.0 {
             printer.print(sentence, draw);
-            printer.print(Punctuation::SentenceEnd, draw);
+            printer.print(wa::Punctuation::SentenceEnd, draw);
         }
     }
 }
@@ -627,7 +628,7 @@ struct Model {
 
 fn model(app: &App) -> Model {
     Model {
-        text: Text::random(&mut thread_rng()),
+        text: wa::Text::random(&mut thread_rng()),
         page: Page::new(app.window_rect().w_h()),
         selected_attribute: Attribute::CharWidth,
     }
@@ -669,11 +670,11 @@ fn event(app: &App, model: &mut Model, event: Event) {
 
             KeyReleased(Key::Space) => {
                 if shift {
-                    let text2 = Text::random(&mut thread_rng());
+                    let text2 = wa::Text::random(&mut thread_rng());
 
                     model.text.0.extend(text2.0);
                 } else {
-                    model.text = Text::random(&mut thread_rng());
+                    model.text = wa::Text::random(&mut thread_rng());
                 }
             }
 
@@ -698,8 +699,8 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {}
 
 lazy_static::lazy_static! {
     static ref DEBUG: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
-    static ref PARAGRAPH: Box<Paragraph> = Box::new(paragraph("ga^-xu,y-we`-pe~-ye, li~-ye`: se^-xu,y-pe~. ga^-xu,y li~-ye`."));
-    static ref TEXT: Box<Text> = Box::new(text(include_str!("text.txt")));
+    static ref PARAGRAPH: Box<wa::Paragraph> = Box::new(wa::paragraph("ga^-xu,y-we`-pe~-ye, li~-ye`: se^-xu,y-pe~. ga^-xu,y li~-ye`."));
+    static ref TEXT: Box<wa::Text> = Box::new(wa::text(include_str!("text.txt")));
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
@@ -812,7 +813,7 @@ impl<'a> Printer<'a> {
 
         // draw coda
         if let Some(coda) = &syllable.coda {
-            coda.draw(self.page, char_centre, false, draw);
+            DrawableTopOrBottom::draw(coda, self.page, char_centre, false, draw);
         } else {
             let page = &self.page;
             let y = char_centre.1
