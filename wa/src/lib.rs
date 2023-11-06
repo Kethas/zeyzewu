@@ -6,7 +6,7 @@ use std::{
 use rand::Rng;
 use unicode_normalization::char::{compose, decompose_canonical};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum CStem {
     P,
     T,
@@ -29,6 +29,7 @@ impl Random for CStem {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum PureC {
     Strong(CStem),
     Blunt(CStem),
@@ -86,6 +87,7 @@ impl Random for PureC {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum H {
     W,
     Y,
@@ -118,6 +120,7 @@ impl Random for H {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum C {
     H(H),     // 4
     C(PureC), // 15
@@ -154,6 +157,7 @@ impl Random for C {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum V {
     A,
     E,
@@ -189,6 +193,7 @@ impl Random for V {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum T {
     High,
     Low,
@@ -229,6 +234,8 @@ impl Random for T {
         }
     }
 }
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Punctuation {
     WordBreak,
     PhraseBreak,
@@ -246,6 +253,7 @@ impl Random for Punctuation {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Syllable {
     pub onset: C,
     pub vowel: V,
@@ -426,6 +434,7 @@ pub fn syllable(str: &str) -> Syllable {
     str.parse().unwrap()
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Word(pub Vec<Syllable>);
 
 impl Display for Word {
@@ -487,6 +496,7 @@ pub fn word(word: &str) -> Word {
     word.parse().unwrap()
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Phrase(pub Vec<Word>);
 
 impl Display for Phrase {
@@ -546,6 +556,8 @@ impl Random for Phrase {
 pub fn phrase(phrase: &str) -> Phrase {
     phrase.parse().unwrap()
 }
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Sentence(pub Vec<Phrase>);
 
 impl Display for Sentence {
@@ -608,6 +620,7 @@ pub fn sentence(sentence: &str) -> Sentence {
     sentence.parse().unwrap()
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Paragraph(pub Vec<Sentence>);
 
 impl Display for Paragraph {
@@ -667,6 +680,7 @@ pub fn paragraph(paragraph: &str) -> Paragraph {
     paragraph.parse().unwrap()
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Text(pub Vec<Paragraph>);
 
 impl Display for Text {
