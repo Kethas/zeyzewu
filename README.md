@@ -6,4 +6,4 @@ In addition it contains a binary which can convert raw notation into pretty nota
 A piece of writing. This crate is a binary which will display text in the real orthography.
 
 # kyáy
-Meaning; a word. This crate is a CLI and webapp which will let you edit or view the zẽy-zẽ-wũ dictionary.
+Meaning; a word. This crate exposes a dictionary and a cli/app/webapp.

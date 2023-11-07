@@ -180,6 +180,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde"
+version = "1.0.191"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a834c4821019838224821468552240d4d95d14e751986442c816572d39a080c9"
+dependencies = [
+ "serde_derive",
+]
+
+[[package]]
+name = "serde_derive"
+version = "1.0.191"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46fa52d5646bce91b680189fe5b1c049d2ea38dabb4e2e7c8d00ca12cfbfbcfd"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -238,6 +258,8 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "rand",
+ "serde",
+ "serde_derive",
  "unicode-normalization",
 ]
 

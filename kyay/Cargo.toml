@@ -5,5 +5,13 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+
 [dependencies]
 wa = { path = "../wa" }
+derive_more = "0.99.17"
+eframe = "0.23.0"
+env_logger = "0.10.0"
+serde = "1.0.191"
+serde_derive = "1.0.191"
+serde_json = "1.0.108"
