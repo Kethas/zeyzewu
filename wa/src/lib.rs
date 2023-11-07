@@ -1,6 +1,6 @@
 use std::{
     fmt::{Display, Write},
-    str::FromStr,
+    str::FromStr, f32::consts::E,
 };
 
 use rand::Rng;
@@ -88,6 +88,33 @@ impl Random for PureC {
     }
 }
 
+impl Ipa for PureC {
+    fn ipa(&self) -> String {
+        match self {
+            PureC::Strong(CStem::P) => "pʰ",
+            PureC::Blunt(CStem::P) => "b",
+            PureC::Sharp(CStem::P) => "pʲ",
+
+            PureC::Strong(CStem::T) => "t̺ʰ",
+            PureC::Blunt(CStem::T) => "d̺",
+            PureC::Sharp(CStem::T) => "t̺ʲ",
+
+            PureC::Strong(CStem::K) => "kʰ",
+            PureC::Blunt(CStem::K) => "g",
+            PureC::Sharp(CStem::K) => "kʲ",
+
+            PureC::Strong(CStem::S) => "s̺",
+            PureC::Blunt(CStem::S) => "z̺",
+            PureC::Sharp(CStem::S) => "sʲ",
+
+            PureC::Strong(CStem::R) => "r",
+            PureC::Blunt(CStem::R) => "ɹ",
+            PureC::Sharp(CStem::R) => "l",
+        }
+        .to_owned()
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum H {
     W,
@@ -117,6 +144,17 @@ impl Random for H {
             2 => H::X,
             3 => H::H,
             _ => unreachable!(),
+        }
+    }
+}
+
+impl Ipa for H {
+    fn ipa(&self) -> String {
+        match self {
+            H::W => format!("{}\u{032F}\u{0357}", V::U),
+            H::Y => format!("{}\u{032F}\u{0351}", V::I),
+            H::X => "x".to_owned(),
+            H::H => "h".to_owned(),
         }
     }
 }
@@ -158,6 +196,15 @@ impl Random for C {
     }
 }
 
+impl Ipa for C {
+    fn ipa(&self) -> String {
+        match self {
+            C::H(h) => h.ipa(),
+            C::C(c) => c.ipa(),
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum V {
     A,
@@ -191,6 +238,18 @@ impl Random for V {
             4 => V::U,
             _ => unreachable!(),
         }
+    }
+}
+
+impl Ipa for V {
+    fn ipa(&self) -> String {
+        match self {
+            V::A => "ä",
+            V::E => "e̞",
+            V::I => "i",
+            V::O => "o̞",
+            V::U => "u",
+        }.to_owned()
     }
 }
 
@@ -233,6 +292,17 @@ impl Random for T {
             3 => T::Nasal,
             _ => unreachable!(),
         }
+    }
+}
+
+impl Ipa for T {
+    fn ipa(&self) -> String {
+        match self {
+            T::High => "˥",
+            T::Low => "˩",
+            T::Peaking => "˧˥˧",
+            T::Nasal => "\u{0303}",
+        }.to_owned()
     }
 }
 
@@ -346,14 +416,11 @@ impl FromStr for Syllable {
         let mut tone_ch = None;
         let mut counter = 0;
 
-        println!("decomposing \"{ch}\"...");
         decompose_canonical(ch, |ch| {
             if counter == 0 {
                 vowel_ch = ch;
-                println!("vowel_ch = '{ch}'");
             } else if counter == 1 {
                 tone_ch = Some(ch);
-                println!("tone_ch = '{ch}'");
             } else {
                 return;
             }
@@ -431,6 +498,31 @@ impl Random for Syllable {
     }
 }
 
+impl Ipa for Syllable {
+    fn ipa(&self) -> String {
+        let mut buffer = String::new();
+
+        buffer.push_str(&self.onset.ipa());
+        buffer.push_str(&self.vowel.ipa());
+
+        if self.tone == T::Nasal {
+            buffer.push_str(&self.tone.ipa());
+        }
+
+        if let Some(coda) = &self.coda {
+            buffer.push_str(&coda.ipa());
+        };
+
+        if self.tone != T::Nasal {
+            buffer.push_str(&self.tone.ipa());
+        } else {
+            buffer.push_str(&T::Low.ipa());
+        }
+
+        buffer
+    }
+}
+
 pub fn syllable(str: &str) -> Syllable {
     str.parse().unwrap()
 }
@@ -490,6 +582,25 @@ impl Random for Word {
         }
 
         Self(b)
+    }
+}
+
+impl Ipa for Word {
+    fn ipa(&self) -> String {
+        let mut buffer = String::new();
+
+        let mut first = true;
+        for syllable in &self.0 {
+            if first {
+                first = false;
+            } else {
+                buffer.push('.')
+            }
+
+            buffer.push_str(&syllable.ipa())
+        }
+
+        buffer
     }
 }
 
@@ -554,6 +665,25 @@ impl Random for Phrase {
     }
 }
 
+impl Ipa for Phrase {
+    fn ipa(&self) -> String {
+        let mut buffer = String::new();
+
+        let mut first = true;
+        for word in &self.0 {
+            if first {
+                first = false;
+            } else {
+                buffer.push(' ')
+            }
+
+            buffer.push_str(&word.ipa())
+        }
+
+        buffer
+    }
+}
+
 pub fn phrase(phrase: &str) -> Phrase {
     phrase.parse().unwrap()
 }
@@ -568,7 +698,7 @@ impl Display for Sentence {
             if first {
                 first = false;
             } else {
-                f.write_str(": ")?;
+                f.write_str(" ")?;
             }
             phrase.fmt(f)?;
         }
@@ -614,6 +744,25 @@ impl Random for Sentence {
         }
 
         Self(b)
+    }
+}
+
+impl Ipa for Sentence {
+    fn ipa(&self) -> String {
+        let mut buffer = String::new();
+
+        let mut first = true;
+        for phrase in &self.0 {
+            if first {
+                first = false;
+            } else {
+                buffer.push_str(", ")
+            }
+
+            buffer.push_str(&phrase.ipa())
+        }
+
+        buffer
     }
 }
 
@@ -677,6 +826,19 @@ impl Random for Paragraph {
     }
 }
 
+impl Ipa for Paragraph {
+    fn ipa(&self) -> String {
+        let mut buffer = String::new();
+
+        for sentence in &self.0 {
+            buffer.push_str(&sentence.ipa());
+            buffer.push_str(". ");
+        }
+
+        buffer
+    }
+}
+
 pub fn paragraph(paragraph: &str) -> Paragraph {
     paragraph.parse().unwrap()
 }
@@ -737,10 +899,27 @@ impl Random for Text {
     }
 }
 
+impl Ipa for Text {
+    fn ipa(&self) -> String {
+        let mut buffer = String::new();
+
+        for paragraph in &self.0 {
+            buffer.push_str(&paragraph.ipa());
+            buffer.push('\n');
+        }
+
+        buffer
+    }
+}
+
 pub fn text(text: &str) -> Text {
     text.parse().unwrap()
 }
 
 pub trait Random {
     fn random(rng: &mut impl Rng) -> Self;
+}
+
+pub trait Ipa {
+    fn ipa(&self) -> String;
 }
