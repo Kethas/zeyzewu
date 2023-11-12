@@ -1,8 +1,10 @@
 use std::{
+    f32::consts::E,
     fmt::{Display, Write},
-    str::FromStr, f32::consts::E,
+    str::FromStr,
 };
 
+use derive_more::{Deref, DerefMut};
 use rand::Rng;
 use serde_derive::*;
 use unicode_normalization::char::{compose, decompose_canonical};
@@ -249,7 +251,8 @@ impl Ipa for V {
             V::I => "i",
             V::O => "o̞",
             V::U => "u",
-        }.to_owned()
+        }
+        .to_owned()
     }
 }
 
@@ -302,7 +305,8 @@ impl Ipa for T {
             T::Low => "˩",
             T::Peaking => "˧˥˧",
             T::Nasal => "\u{0303}",
-        }.to_owned()
+        }
+        .to_owned()
     }
 }
 
@@ -527,8 +531,18 @@ pub fn syllable(str: &str) -> Syllable {
     str.parse().unwrap()
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct Word(pub Vec<Syllable>);
+#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Word(#[deref] pub Vec<Syllable>);
+
+impl IntoIterator for Word {
+    type Item = Syllable;
+
+    type IntoIter = <Vec<Syllable> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
 
 impl Display for Word {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -608,8 +622,18 @@ pub fn word(word: &str) -> Word {
     word.parse().unwrap()
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct Phrase(pub Vec<Word>);
+#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Phrase(#[deref] pub Vec<Word>);
+
+impl IntoIterator for Phrase {
+    type Item = Word;
+
+    type IntoIter = <Vec<Word> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
 
 impl Display for Phrase {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -688,8 +712,18 @@ pub fn phrase(phrase: &str) -> Phrase {
     phrase.parse().unwrap()
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct Sentence(pub Vec<Phrase>);
+#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Sentence(#[deref] pub Vec<Phrase>);
+
+impl IntoIterator for Sentence {
+    type Item = Phrase;
+
+    type IntoIter = <Vec<Phrase> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
 
 impl Display for Sentence {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -770,8 +804,18 @@ pub fn sentence(sentence: &str) -> Sentence {
     sentence.parse().unwrap()
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct Paragraph(pub Vec<Sentence>);
+#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Paragraph(#[deref] pub Vec<Sentence>);
+
+impl IntoIterator for Paragraph {
+    type Item = Sentence;
+
+    type IntoIter = <Vec<Sentence> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
 
 impl Display for Paragraph {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -843,8 +887,18 @@ pub fn paragraph(paragraph: &str) -> Paragraph {
     paragraph.parse().unwrap()
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct Text(pub Vec<Paragraph>);
+#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Text(#[deref] pub Vec<Paragraph>);
+
+impl IntoIterator for Text {
+    type Item = Paragraph;
+
+    type IntoIter = <Vec<Paragraph> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
 
 impl Display for Text {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
