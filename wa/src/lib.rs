@@ -314,7 +314,7 @@ impl Ipa for T {
 pub enum Punctuation {
     WordBreak,
     PhraseBreak,
-    SentenceEnd,
+    SentenceBreak,
 }
 
 impl Random for Punctuation {
@@ -322,7 +322,7 @@ impl Random for Punctuation {
         match rng.gen_range(0..10) {
             0..=3 => Punctuation::WordBreak,
             4..=6 => Punctuation::PhraseBreak,
-            7..=9 => Punctuation::SentenceEnd,
+            7..=9 => Punctuation::SentenceBreak,
             _ => unreachable!(),
         }
     }
