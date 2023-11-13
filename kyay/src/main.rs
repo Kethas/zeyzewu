@@ -1,4 +1,5 @@
 use std::{
+    collections::{hash_map::RandomState, HashSet},
     fs::{File, OpenOptions},
     io::{BufReader, BufWriter},
     path::PathBuf,
@@ -30,6 +31,8 @@ struct KyayApp {
 
     add_word_text: String,
     add_tag_text: String,
+
+    tag_filter: String,
 }
 
 impl KyayApp {
@@ -179,6 +182,12 @@ impl App for KyayApp {
 
                 ui.separator();
 
+                ui.add(
+                    egui::TextEdit::singleline(&mut self.tag_filter).hint_text("Filter tags..."),
+                );
+
+                ui.separator();
+
                 if ui.button("Save").clicked() {
                     self.save_to_json();
                 }
@@ -189,9 +198,37 @@ impl App for KyayApp {
             });
         });
 
+        let filter_tags: HashSet<String, RandomState> = HashSet::from_iter(
+            self.tag_filter
+                .split(' ')
+                .map(|s| s.to_owned())
+                .filter(|s| !s.is_empty()),
+        );
+
         egui::SidePanel::new(egui::panel::Side::Left, "words_panel").show(ctx, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
-                for word in self.dictionary.keys() {
+                let mut words = self
+                    .dictionary
+                    .iter()
+                    .filter(|(_, v)| {
+                        if filter_tags.is_empty() {
+                            return true;
+                        }
+
+                        for d in *v {
+                            for tag in &d.tags {
+                                if filter_tags.contains(tag) {
+                                    return true;
+                                }
+                            }
+                        }
+                        false
+                    })
+                    .map(|(k, _)| k)
+                    .collect::<Vec<_>>();
+                words.sort();
+
+                for word in words {
                     let word_txt = word.to_string();
 
                     let is_selected = Some(*word) == self.selected;
@@ -218,22 +255,60 @@ impl App for KyayApp {
 
                     if let Some(defs) = self.dictionary.get(&selected).cloned() {
                         for (i, def) in defs.into_iter().enumerate() {
+                            if !filter_tags.is_empty() {
+                                let mut br = true;
+
+                                for tag in &def.tags {
+                                    if filter_tags.contains(tag) {
+                                        br = false;
+                                    }
+                                }
+
+                                if br {
+                                    continue;
+                                }
+                            }
+
                             ui.with_layout(
                                 egui::Layout::top_down_justified(egui::Align::Min),
                                 |ui| {
                                     egui::Frame::none()
                                         .stroke(egui::Stroke::new(
                                             3.0,
-                                            egui::Color32::from_rgb(220, 220, 220),
+                                            egui::Color32::from_rgba_unmultiplied(
+                                                220, 220, 220, 200,
+                                            ),
                                         ))
+                                        .rounding(7.5)
                                         .inner_margin(5.0)
+                                        .outer_margin(2.5)
                                         .show(ui, |ui| {
                                             ui.horizontal(|ui| {
                                                 for (j, tag) in def.tags.iter().enumerate() {
-                                                    ui.label(
-                                                        egui::RichText::new(tag)
-                                                            .font(egui::FontId::proportional(10.0)),
-                                                    );
+                                                    let mut frame = egui::Frame::none()
+                                                        .stroke(egui::Stroke::new(
+                                                            1.0,
+                                                            egui::Color32::from_rgba_unmultiplied(
+                                                                200, 200, 200, 200,
+                                                            ),
+                                                        ))
+                                                        .rounding(3.0)
+                                                        .inner_margin(2.0)
+                                                        .outer_margin(0.5);
+                                                    if !filter_tags.is_empty()
+                                                        && filter_tags.contains(tag)
+                                                    {
+                                                        frame = frame.fill(
+                                                            egui::Color32::from_rgba_unmultiplied(
+                                                                150, 150, 150, 10,
+                                                            ),
+                                                        );
+                                                    }
+                                                    frame.show(ui, |ui| {
+                                                        ui.label(egui::RichText::new(tag).font(
+                                                            egui::FontId::proportional(10.0),
+                                                        ));
+                                                    });
                                                     if ui.button("-").clicked() {
                                                         self.modify_word(&selected, |defs| {
                                                             defs[i].tags.remove(j);
@@ -343,6 +418,7 @@ fn main() {
                 selected: None,
                 add_word_text: String::new(),
                 add_tag_text: String::new(),
+                tag_filter: String::new(),
             })
         }),
     )
