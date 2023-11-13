@@ -9,7 +9,7 @@ use rand::Rng;
 use serde_derive::*;
 use unicode_normalization::char::{compose, decompose_canonical};
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum CStem {
     P,
     T,
@@ -32,7 +32,7 @@ impl Random for CStem {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum PureC {
     Strong(CStem),
     Blunt(CStem),
@@ -117,7 +117,7 @@ impl Ipa for PureC {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum H {
     W,
     Y,
@@ -161,7 +161,7 @@ impl Ipa for H {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum C {
     H(H),     // 4
     C(PureC), // 15
@@ -207,7 +207,7 @@ impl Ipa for C {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum V {
     A,
     E,
@@ -256,7 +256,7 @@ impl Ipa for V {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum T {
     High,
     Low,
@@ -310,7 +310,7 @@ impl Ipa for T {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum Punctuation {
     WordBreak,
     PhraseBreak,
@@ -328,7 +328,7 @@ impl Random for Punctuation {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Syllable {
     pub onset: C,
     pub vowel: V,
@@ -531,7 +531,7 @@ pub fn syllable(str: &str) -> Syllable {
     str.parse().unwrap()
 }
 
-#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Word(#[deref] pub Vec<Syllable>);
 
 impl IntoIterator for Word {
@@ -622,7 +622,7 @@ pub fn word(word: &str) -> Word {
     word.parse().unwrap()
 }
 
-#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Phrase(#[deref] pub Vec<Word>);
 
 impl IntoIterator for Phrase {
@@ -712,7 +712,7 @@ pub fn phrase(phrase: &str) -> Phrase {
     phrase.parse().unwrap()
 }
 
-#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Sentence(#[deref] pub Vec<Phrase>);
 
 impl IntoIterator for Sentence {
@@ -804,7 +804,7 @@ pub fn sentence(sentence: &str) -> Sentence {
     sentence.parse().unwrap()
 }
 
-#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Paragraph(#[deref] pub Vec<Sentence>);
 
 impl IntoIterator for Paragraph {
@@ -887,7 +887,7 @@ pub fn paragraph(paragraph: &str) -> Paragraph {
     paragraph.parse().unwrap()
 }
 
-#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Deref, DerefMut, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Text(#[deref] pub Vec<Paragraph>);
 
 impl IntoIterator for Text {
