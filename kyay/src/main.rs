@@ -190,98 +190,108 @@ impl App for KyayApp {
         });
 
         egui::SidePanel::new(egui::panel::Side::Left, "words_panel").show(ctx, |ui| {
-            for word in self.dictionary.keys() {
-                let word_txt = word.to_string();
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                for word in self.dictionary.keys() {
+                    let word_txt = word.to_string();
 
-                let is_selected = Some(*word) == self.selected;
+                    let is_selected = Some(*word) == self.selected;
 
-                ui.with_layout(egui::Layout::top_down_justified(egui::Align::Min), |ui| {
-                    if ui.selectable_label(is_selected, word_txt).clicked() {
-                        self.selected = Some(*word);
-                    }
-                });
-            }
+                    ui.with_layout(egui::Layout::top_down_justified(egui::Align::Min), |ui| {
+                        if ui.selectable_label(is_selected, word_txt).clicked() {
+                            self.selected = Some(*word);
+                        }
+                    });
+                }
+            })
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            if let Some(selected) = self.selected {
-                ui.label(
-                    egui::RichText::new(selected.to_string())
-                        .font(egui::FontId::proportional(40.0)),
-                );
-                ui.label(format!("[{}]", selected.ipa()));
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                if let Some(selected) = self.selected {
+                    ui.label(
+                        egui::RichText::new(selected.to_string())
+                            .font(egui::FontId::proportional(40.0)),
+                    );
+                    ui.label(format!("[{}]", selected.ipa()));
 
-                ui.separator();
+                    ui.separator();
 
-                if let Some(defs) = self.dictionary.get(&selected).cloned() {
-                    for (i, def) in defs.into_iter().enumerate() {
-                        ui.with_layout(egui::Layout::top_down_justified(egui::Align::Min), |ui| {
-                            egui::Frame::none()
-                                .stroke(egui::Stroke::new(
-                                    3.0,
-                                    egui::Color32::from_rgb(220, 220, 220),
-                                ))
-                                .inner_margin(5.0)
-                                .show(ui, |ui| {
-                                    ui.horizontal(|ui| {
-                                        for (j, tag) in def.tags.iter().enumerate() {
-                                            ui.label(
-                                                egui::RichText::new(tag)
-                                                    .font(egui::FontId::proportional(10.0)),
-                                            );
-                                            if ui.button("-").clicked() {
-                                                self.modify_word(&selected, |defs| {
-                                                    defs[i].tags.remove(j);
-                                                })
-                                            }
-                                        }
+                    if let Some(defs) = self.dictionary.get(&selected).cloned() {
+                        for (i, def) in defs.into_iter().enumerate() {
+                            ui.with_layout(
+                                egui::Layout::top_down_justified(egui::Align::Min),
+                                |ui| {
+                                    egui::Frame::none()
+                                        .stroke(egui::Stroke::new(
+                                            3.0,
+                                            egui::Color32::from_rgb(220, 220, 220),
+                                        ))
+                                        .inner_margin(5.0)
+                                        .show(ui, |ui| {
+                                            ui.horizontal(|ui| {
+                                                for (j, tag) in def.tags.iter().enumerate() {
+                                                    ui.label(
+                                                        egui::RichText::new(tag)
+                                                            .font(egui::FontId::proportional(10.0)),
+                                                    );
+                                                    if ui.button("-").clicked() {
+                                                        self.modify_word(&selected, |defs| {
+                                                            defs[i].tags.remove(j);
+                                                        })
+                                                    }
+                                                }
 
-                                        ui.separator();
+                                                ui.separator();
 
-                                        if ui
-                                            .add(
-                                                egui::TextEdit::singleline(&mut self.add_tag_text)
-                                                    .hint_text("Add tag..."),
-                                            )
-                                            .lost_focus()
-                                            && ctx
-                                                .input(|input| input.key_pressed(egui::Key::Enter))
-                                        {
-                                            let text = self.add_tag_text.clone();
-                                            self.modify_word(&selected, |def| {
-                                                def[i].tags.push(text);
+                                                if ui
+                                                    .add(
+                                                        egui::TextEdit::singleline(
+                                                            &mut self.add_tag_text,
+                                                        )
+                                                        .hint_text("Add tag..."),
+                                                    )
+                                                    .lost_focus()
+                                                    && ctx.input(|input| {
+                                                        input.key_pressed(egui::Key::Enter)
+                                                    })
+                                                {
+                                                    let text = self.add_tag_text.clone();
+                                                    self.modify_word(&selected, |def| {
+                                                        def[i].tags.push(text);
+                                                    });
+
+                                                    self.add_tag_text = String::new();
+                                                }
                                             });
 
-                                            self.add_tag_text = String::new();
-                                        }
-                                    });
+                                            let mut text = def.definition.clone();
 
-                                    let mut text = def.definition.clone();
+                                            if ui.text_edit_multiline(&mut text).changed() {
+                                                self.modify_word(&selected, |defs| {
+                                                    defs[i].definition = text;
+                                                });
+                                            };
 
-                                    if ui.text_edit_multiline(&mut text).changed() {
-                                        self.modify_word(&selected, |defs| {
-                                            defs[i].definition = text;
+                                            if ui.button("Remove this definition").clicked() {
+                                                self.remove_def(&selected, i);
+                                            }
                                         });
-                                    };
+                                },
+                            );
+                        }
 
-                                    if ui.button("Remove this definition").clicked() {
-                                        self.remove_def(&selected, i);
-                                    }
-                                });
-                        });
-                    }
-
-                    if ui.button("Add Definition").clicked() {
-                        self.add_def(
-                            &selected,
-                            Definition {
-                                tags: Vec::new(),
-                                definition: String::new(),
-                            },
-                        )
+                        if ui.button("Add Definition").clicked() {
+                            self.add_def(
+                                &selected,
+                                Definition {
+                                    tags: Vec::new(),
+                                    definition: String::new(),
+                                },
+                            )
+                        }
                     }
                 }
-            }
+            })
         });
     }
 }
