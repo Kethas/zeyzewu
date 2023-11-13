@@ -1,0 +1,67 @@
+{
+  "entries": [
+    [
+      {
+        "onset": {
+          "C": {
+            "Blunt": "S"
+          }
+        },
+        "vowel": "E",
+        "tone": "Nasal",
+        "coda": "Y"
+      },
+      []
+    ],
+    [
+      {
+        "onset": {
+          "C": {
+            "Strong": "R"
+          }
+        },
+        "vowel": "E",
+        "tone": "Low",
+        "coda": "Y"
+      },
+      []
+    ],
+    [
+      {
+        "onset": {
+          "H": "X"
+        },
+        "vowel": "A",
+        "tone": "High",
+        "coda": "X"
+      },
+      []
+    ],
+    [
+      {
+        "onset": {
+          "H": "X"
+        },
+        "vowel": "U",
+        "tone": "High",
+        "coda": "Y"
+      },
+      [
+        {
+          "tags": [
+            "verb",
+            "dynamic"
+          ],
+          "definition": "To eat.\nTo consume something."
+        },
+        {
+          "tags": [
+            "noun",
+            "inanimate"
+          ],
+          "definition": "Food/Something that can be eaten, though usually specifically hardtack."
+        }
+      ]
+    ]
+  ]
+}
